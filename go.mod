@@ -13,6 +13,7 @@ require (
 	github.com/praserx/ipconv v1.2.1
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.8.1
+	golang.org/x/crypto v0.27.0
 	k8s.io/apimachinery v0.31.1
 	k8s.io/client-go v0.31.1
 )
@@ -63,7 +64,6 @@ require (
 	github.com/spf13/cast v1.6.0 // indirect
 	github.com/spf13/pflag v1.0.6-0.20210604193023-d5e0c0615ace // indirect
 	github.com/x448/float16 v0.8.4 // indirect
-	golang.org/x/crypto v0.27.0 // indirect
 	golang.org/x/net v0.29.0 // indirect
 	golang.org/x/oauth2 v0.21.0 // indirect
 	golang.org/x/sys v0.25.0 // indirect

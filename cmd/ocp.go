@@ -127,6 +127,7 @@ func openShiftCmd() *cobra.Command {
 		ocp.NewWhereabouts(&wh),
 		ocp.ClusterHealth(),
 		ocp.CustomWorkload(&wh),
+		ocp.NewCapacityBenchmark(&wh),
 	)
 	util.SetupCmd(ocpCmd)
 	return ocpCmd

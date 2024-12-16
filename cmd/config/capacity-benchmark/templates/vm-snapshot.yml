@@ -1,0 +1,10 @@
+apiVersion: snapshot.kubevirt.io/v1beta1
+kind: VirtualMachineSnapshot
+metadata:
+  name: "{{ .name }}-{{ .Iteration }}-{{ .Replica }}"
+spec:
+  deletionPolicy: delete
+  source:
+    apiGroup: kubevirt.io
+    kind: VirtualMachine
+    name: "{{ .name }}-{{ .Iteration }}-{{ .Replica }}"
