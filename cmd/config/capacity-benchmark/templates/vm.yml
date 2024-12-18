@@ -1,11 +1,11 @@
 apiVersion: kubevirt.io/v1
 kind: VirtualMachine
 metadata:
-  name: "{{ .name }}-{{ .Iteration }}-{{ .Replica }}"
+  name: "{{ .name }}-{{ .counter }}-{{ .Replica }}"
 spec:
   dataVolumeTemplates:
   - metadata:
-      name: "{{ .name }}-{{ .Iteration }}-{{ .Replica }}-root"
+      name: "{{ .name }}-{{ .counter }}-{{ .Replica }}-root"
       labels:
       {{range $key, $value := .rootVolumeLabels }}
         {{ $key }}: {{ $value }}
@@ -20,7 +20,7 @@ spec:
           requests:
             storage: {{ default "10Gi" .rootVolumeSize }}
   - metadata:
-      name: "{{ .name }}-{{ .Iteration }}-{{ .Replica }}-data-1"
+      name: "{{ .name }}-{{ .counter }}-{{ .Replica }}-data-1"
       labels:
       {{range $key, $value := .dataVolumeLabels }}
         {{ $key }}: {{ $value }}
@@ -35,7 +35,7 @@ spec:
             storage: {{ default "1Gi" .dataVolumeSize }}
   - metadata:
       creationTimestamp: null
-      name: "{{ .name }}-{{ .Iteration }}-{{ .Replica }}-data-2"
+      name: "{{ .name }}-{{ .counter }}-{{ .Replica }}-data-2"
       labels:
       {{range $key, $value := .dataVolumeLabels }}
         {{ $key }}: {{ $value }}
@@ -57,7 +57,7 @@ spec:
             noCloud: {}
           source:
             secret:
-              secretName: {{ .sshPublicKeySecret }}
+              secretName: "{{ .sshPublicKeySecret }}-{{ .counter }}"
       architecture: amd64
       domain:
         resources:
@@ -88,13 +88,13 @@ spec:
         pod: {}
       volumes:
       - dataVolume:
-          name: "{{ .name }}-{{ .Iteration }}-{{ .Replica }}-root"
+          name: "{{ .name }}-{{ .counter }}-{{ .Replica }}-root"
         name: rootdisk
       - dataVolume:
-          name: "{{ .name }}-{{ .Iteration }}-{{ .Replica }}-data-1"
+          name: "{{ .name }}-{{ .counter }}-{{ .Replica }}-data-1"
         name: data-1
       - dataVolume:
-          name: "{{ .name }}-{{ .Iteration }}-{{ .Replica }}-data-2"
+          name: "{{ .name }}-{{ .counter }}-{{ .Replica }}-data-2"
         name: data-2
       - cloudInitNoCloud:
           userData: |

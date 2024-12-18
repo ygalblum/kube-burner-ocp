@@ -37,7 +37,7 @@ const (
 // NewCapacityBenchmark holds the capacity-benchmark workload
 func NewCapacityBenchmark(wh *workloads.WorkloadHelper) *cobra.Command {
 	var sshKeyPairPath string
-	// var iterations int
+	var maxIterations int
 	// var metricsProfiles []string
 	var rc int
 	cmd := &cobra.Command{
@@ -63,14 +63,28 @@ func NewCapacityBenchmark(wh *workloads.WorkloadHelper) *cobra.Command {
 		},
 		Run: func(cmd *cobra.Command, args []string) {
 			// setMetrics(cmd, metricsProfiles)
-			rc = wh.Run(cmd.Name())
+
+			counter := 0
+			for {
+				os.Setenv("counter", fmt.Sprint(counter))
+				rc = wh.Run(cmd.Name())
+				if rc != 0 {
+					log.Infof("Capacity failed in loop #%d", counter)
+					break
+				}
+				counter += 1
+				if maxIterations > 0 && counter >= maxIterations {
+					log.Infof("Reached maxIterations [%d]", maxIterations)
+					break
+				}
+			}
 		},
 		PostRun: func(cmd *cobra.Command, args []string) {
 			os.Exit(rc)
 		},
 	}
 	cmd.Flags().StringVar(&sshKeyPairPath, "ssh-key-path", "", "Path to save the generarated SSH keys - default to a temporary location")
-	// cmd.Flags().IntVar(&iterations, "iterations", 0, "Number of CRDs to create")
+	cmd.Flags().IntVar(&maxIterations, "max-iterations", 0, "Maximum times to run the test sequence. Default - run until failure (0)")
 	// cmd.Flags().StringSliceVar(&metricsProfiles, "metrics-profile", []string{"metrics-aggregated.yml"}, "Comma separated list of metrics profiles to use")
 	// cmd.MarkFlagRequired("iterations")
 	return cmd

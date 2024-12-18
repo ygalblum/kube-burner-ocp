@@ -1,13 +1,16 @@
 {{- $nsName := "capacity-benchmark" -}}
 {{- $vmCount := 2 -}}
 {{- $vmName := "capacity-test" -}}
-{{- $vmCreateJobName := "create-vms" -}}
+{{- $vmCreateJobName := (nospace (cat "create-vms-" (.counter | toString ))) -}}
 {{- $sshPublicKeySecretName := "burner-ssh-public" -}}
 {{- $rootVolumeSize := 6 -}}
 {{- $dataVolumeSize := 1 -}}
 {{- $volumeLabelKey := "test-capacity-benchmark/volume-type" -}}
 {{- $volumeLabelValueRoot := "root" -}}
 {{- $volumeLabelValueData := "data" -}}
+{{- $jobCounterLabelKey := "test-capacity-benchmark/counter" -}}
+{{- $jobCounterLabelValue := (nospace (cat "counter-" (.counter | toString ))) -}}
+{{- $vmSnapshotJobName := (nospace (cat "snapshot-vms-" (.counter | toString ))) -}}
 ---
 global:
   # gc: true
@@ -52,20 +55,24 @@ jobs:
     replicas: 1
     inputVars:
       name: {{ $sshPublicKeySecretName }}
+      counter: {{ .counter | toString }}
       publicKeyPath: {{ .publicKey }}
 
   - objectTemplate: templates/vm.yml
     replicas: {{ $vmCount }}
     inputVars:
       name: {{ $vmName }}
+      counter: {{ .counter | toString }}
       rootDiskImage: quay.io/containerdisks/fedora:latest
       storageClassName: ontap-iscsi
       rootVolumeLabels:
         {{ $volumeLabelKey }}: {{ $volumeLabelValueRoot }}
+        {{ $jobCounterLabelKey }}: {{ $jobCounterLabelValue }}
       rootVolumeSize: "{{ $rootVolumeSize | toString }}Gi"
       dataVolumeSize: "{{ $dataVolumeSize | toString }}Gi"
       dataVolumeLabels:
         {{ $volumeLabelKey }}: {{ $volumeLabelValueData }}
+        {{ $jobCounterLabelKey }}: {{ $jobCounterLabelValue }}
       sshPublicKeySecret: {{ $sshPublicKeySecretName }}
 
 - name: resize-volumes
@@ -81,6 +88,7 @@ jobs:
     kind: PersistentVolumeClaim
     labelSelector:
       {{ $volumeLabelKey }}: {{ $volumeLabelValueData }}
+      {{ $jobCounterLabelKey }}: {{ $jobCounterLabelValue }}
     patchType: "application/strategic-merge-patch+json"
     objectTemplate: templates/resize_pvc.yml
     inputVars:
@@ -89,6 +97,7 @@ jobs:
     kind: PersistentVolumeClaim
     labelSelector:
       {{ $volumeLabelKey }}: {{ $volumeLabelValueRoot }}
+      {{ $jobCounterLabelKey }}: {{ $jobCounterLabelValue }}
     patchType: "application/strategic-merge-patch+json"
     objectTemplate: templates/resize_pvc.yml
     inputVars:
@@ -107,7 +116,7 @@ jobs:
     labelSelector:
       kube-burner-job: {{ $vmCreateJobName }}
 
-- name: create-snapshots
+- name: {{ $vmSnapshotJobName }}
   jobType: create
   qps: 20
   burst: 20
@@ -135,6 +144,7 @@ jobs:
     replicas: {{ $vmCount }}
     inputVars:
       name: {{ $vmName }}
+      counter: {{ .counter | toString }}
     waitOptions:
       forCondition: Ready
 
