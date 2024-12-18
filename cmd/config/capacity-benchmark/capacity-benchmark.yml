@@ -1,5 +1,5 @@
 {{- $nsName := "capacity-benchmark" -}}
-{{- $vmCount := 2 -}}
+{{- $vmCount := .vmCount -}}
 {{- $vmName := "capacity-test" -}}
 {{- $vmCreateJobName := (nospace (cat "create-vms-" (.counter | toString ))) -}}
 {{- $sshPublicKeySecretName := "burner-ssh-public" -}}

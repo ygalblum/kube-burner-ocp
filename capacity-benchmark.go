@@ -38,6 +38,7 @@ const (
 func NewCapacityBenchmark(wh *workloads.WorkloadHelper) *cobra.Command {
 	var sshKeyPairPath string
 	var maxIterations int
+	var vmsPerIteration int
 	// var metricsProfiles []string
 	var rc int
 	cmd := &cobra.Command{
@@ -60,6 +61,7 @@ func NewCapacityBenchmark(wh *workloads.WorkloadHelper) *cobra.Command {
 			}
 			os.Setenv("privateKey", privateKeyPath)
 			os.Setenv("publicKey", publicKeyPath)
+			os.Setenv("vmCount", fmt.Sprint(vmsPerIteration))
 		},
 		Run: func(cmd *cobra.Command, args []string) {
 			// setMetrics(cmd, metricsProfiles)
@@ -85,6 +87,7 @@ func NewCapacityBenchmark(wh *workloads.WorkloadHelper) *cobra.Command {
 	}
 	cmd.Flags().StringVar(&sshKeyPairPath, "ssh-key-path", "", "Path to save the generarated SSH keys - default to a temporary location")
 	cmd.Flags().IntVar(&maxIterations, "max-iterations", 0, "Maximum times to run the test sequence. Default - run until failure (0)")
+	cmd.Flags().IntVar(&vmsPerIteration, "vms", 1, "Number of VMs to test in each iteration")
 	// cmd.Flags().StringSliceVar(&metricsProfiles, "metrics-profile", []string{"metrics-aggregated.yml"}, "Comma separated list of metrics profiles to use")
 	// cmd.MarkFlagRequired("iterations")
 	return cmd
