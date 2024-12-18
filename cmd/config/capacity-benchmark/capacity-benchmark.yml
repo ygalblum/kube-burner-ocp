@@ -1,5 +1,5 @@
 {{- $nsName := "capacity-benchmark" -}}
-{{- $vm_count := 1 -}}
+{{- $vmCount := 2 -}}
 {{- $vmName := "capacity-test" -}}
 {{- $vmCreateJobName := "create-vms" -}}
 {{- $sshPublicKeySecretName := "burner-ssh-public" -}}
@@ -55,7 +55,7 @@ jobs:
       publicKeyPath: {{ .publicKey }}
 
   - objectTemplate: templates/vm.yml
-    replicas: {{ $vm_count }}
+    replicas: {{ $vmCount }}
     inputVars:
       name: {{ $vmName }}
       rootDiskImage: quay.io/containerdisks/fedora:latest
@@ -132,7 +132,7 @@ jobs:
   preLoadImages: false
   objects:
   - objectTemplate: templates/vm-snapshot.yml
-    replicas: {{ $vm_count }}
+    replicas: {{ $vmCount }}
     inputVars:
       name: {{ $vmName }}
     waitOptions:
