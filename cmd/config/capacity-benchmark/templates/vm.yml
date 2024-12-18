@@ -101,7 +101,7 @@ spec:
             #cloud-config
             chpasswd:
               expire: false
-            password: v6od-s99n-efep
+            password: {{ uuidv4 }}
             user: fedora
             runcmd: []
         name: cloudinitdisk
