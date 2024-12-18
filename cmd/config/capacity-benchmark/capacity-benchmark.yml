@@ -22,7 +22,7 @@ global:
 metricsEndpoints:
 - indexer:
     type: local
-    metricsDirectory: ./metrics
+    metricsDirectory: "./metrics-{{ .counter | toString }}"
 
 jobs:
 - name: {{ $vmCreateJobName }}
