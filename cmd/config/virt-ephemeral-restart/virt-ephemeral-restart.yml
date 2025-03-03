@@ -1,0 +1,207 @@
+{{- $testNamespacesLabelKey := "kube-burner.io/test-name" -}}
+{{- $testNamespacesLabelValue := "virt-ephemeral-restart" -}}
+{{- $baseDataVolumeName := "master-image" -}}
+{{- $baseVolumeSnapshotName := "master-image" -}}
+{{- $baseDataSourceName := "master-image" -}}
+{{- $createVMsJobName := "create-vms" -}}
+{{- $vmName := "ephemeral-vm" -}}
+{{- $sshPublicKeySecretName := "burner-clone-virt-ephemeral-restart" -}}
+{{- $rootDiskVolumeName := (list $vmName "root") | join "-" }}
+{{- $vmTypeLabelKey := "clone.kube-burner.io/vm-type" -}}
+{{- $volumeTypeLabelKey := "clone.kube-burner.io/volume-type" -}}
+{{- $typeEphemeral := "ephemeral" -}}
+
+global:
+  measurements:
+  - name: vmiLatency
+  - name: dataVolumeLatency
+
+metricsEndpoints:
+- indexer:
+    type: local
+    metricsDirectory: ./virt-ephemeral-restart-results
+
+jobs:
+- name: start-fresh
+  jobType: delete
+  waitForDeletion: true
+  qps: 5
+  burst: 10
+  objects:
+  - kind: Namespace
+    labelSelector:
+      {{ $testNamespacesLabelKey }}: {{ $testNamespacesLabelValue }}
+
+# Create the DV in a separate job to make sure it is ready before continuing
+- name: create-base-image-dv
+  jobType: create
+  jobIterations: 1
+  qps: 20
+  burst: 20
+  namespacedIterations: false
+  namespace: {{ .testNamespace }}
+  namespaceLabels:
+    {{ $testNamespacesLabelKey }}: {{ $testNamespacesLabelValue }}
+  # verify object count after running each job
+  verifyObjects: true
+  errorOnVerify: true
+  # wait all VMI be in the Ready Condition
+  waitWhenFinished: false
+  podWait: true
+  # timeout time after waiting for all object creation
+  maxWaitTimeout: 15m
+  # wait before job completes to allow metrics collection
+  jobPause: 1m
+  # Do not clean the namespaces
+  cleanup: false
+  # Set missing key as empty to allow using default values
+  defaultMissingKeysWithZero: true
+  objects:
+  - objectTemplate: templates/baseImageDataVolume.yml
+    replicas: 1
+    inputVars:
+      baseDataVolumeName: {{ $baseDataVolumeName }}
+      baseDataVolumeUrl: "docker://quay.io/containerdisks/fedora:latest"
+      storageClassName: {{ .storageClassName }}
+      baseDataVolumeSize: "5Gi"
+      accessMode: {{ .accessMode }}
+    waitOptions:
+      customStatusPaths:
+      - key: '(.conditions.[] | select(.type == "Ready")).status'
+        value: "True"
+
+- name: create-data-source
+  jobType: create
+  jobIterations: 1
+  qps: 20
+  burst: 20
+  namespacedIterations: false
+  namespace: {{ .testNamespace }}
+  namespaceLabels:
+    {{ $testNamespacesLabelKey }}: {{ $testNamespacesLabelValue }}
+  # verify object count after running each job
+  verifyObjects: true
+  errorOnVerify: true
+  # wait all VMI be in the Ready Condition
+  waitWhenFinished: false
+  podWait: true
+  # timeout time after waiting for all object creation
+  maxWaitTimeout: 15m
+  # wait before job completes to allow metrics collection
+  jobPause: 1m
+  # Do not clean the namespaces
+  cleanup: false
+  # Set missing key as empty to allow using default values
+  defaultMissingKeysWithZero: true
+  objects:
+  {{ if .useSnapshot | default false }}
+  - objectTemplate: templates/baseImageDataVolumeSnapshot.yml
+    replicas: 1
+    inputVars:
+      baseVolumeSnapshotName: {{ $baseVolumeSnapshotName }}
+      volumeSnapshotClassName: {{ .volumeSnapshotClassName }}
+      baseVolumeSnapshotPVCName: {{ $baseDataVolumeName }}
+    waitOptions:
+      customStatusPaths:
+      - key: '.readyToUse | tostring'
+        value: "true"
+  {{ end }}
+  - objectTemplate: templates/baseImageDataSource.yml
+    replicas: 1
+    inputVars:
+      baseDataSourceName: {{ $baseDataSourceName }}
+      baseDataSourcePVCName: {{ $baseDataVolumeName }}
+      baseDataSourcePVCNamespace: {{ .testNamespace }}
+      baseDataSourceSnapshotName: {{ $baseVolumeSnapshotName }}
+      baseDataSourceSnapshotNamespace: {{ .testNamespace }}
+      useSnapshot: {{ .useSnapshot | default false }}
+    waitOptions:
+      customStatusPaths:
+      - key: '(.conditions.[] | select(.type == "Ready")).status'
+        value: "True"
+
+- name: {{ $createVMsJobName }}
+  jobType: create
+  jobIterations: 1
+  qps: 20
+  burst: 20
+  namespacedIterations: false
+  namespace: {{ .testNamespace }}
+  # verify object count after running each job
+  verifyObjects: true
+  errorOnVerify: true
+  # wait all VMI be in the Ready Condition
+  waitWhenFinished: false
+  podWait: true
+  # timeout time after waiting for all object creation
+  maxWaitTimeout: 1h
+  jobPause: 10s
+  # cleanup cleans previous execution (not deleted or failed)
+  cleanup: false
+  # Set missing key as empty to allow using default values
+  defaultMissingKeysWithZero: true
+  beforeCleanup: "./check.sh check_vm_running kube-burner-job {{ $createVMsJobName }} {{ .testNamespace }} {{ .privateKey }} fedora"
+  objects:
+
+  - objectTemplate: templates/secret_ssh_public.yml
+    runOnce: true
+    replicas: 1
+    inputVars:
+      name: {{ $sshPublicKeySecretName }}
+      publicKeyPath: {{ .publicKey }}
+
+  - objectTemplate: templates/vm.yml
+    replicas: {{ .vmCount }}
+    inputVars:
+      vmName: {{ $vmName }}
+      vmLabels:
+        {{ $vmTypeLabelKey }}: {{ $typeEphemeral }}
+      rootDiskVolumeName: {{ $rootDiskVolumeName }}
+      rootVolumeLabels:
+        {{ $volumeTypeLabelKey }}: {{ $typeEphemeral }}
+      rootdiskVolumeSourceRef:
+        kind: DataSource
+        name: {{ $baseDataSourceName }}
+        namespace: {{ .testNamespace }}
+      storageClassName: {{ .storageClassName }}
+      sshPublicKeySecret: {{ $sshPublicKeySecretName }}
+      accessMode: {{ .accessMode }}
+
+- name: stop-ephemeral-vms
+  jobType: kubevirt
+  qps: 20
+  burst: 20
+  jobIterations: 1
+  maxWaitTimeout: 1h
+  objectWait: true
+  objects:
+  - kubeVirtOp: stop
+    labelSelector:
+      kube-burner-job: {{ $createVMsJobName }}
+      {{ $vmTypeLabelKey }}: {{ $typeEphemeral }}
+
+- name: delete-ephemeral-volumes
+  jobType: delete
+  waitForDeletion: false
+  qps: 5
+  burst: 10
+  objects:
+  - apiVersion: cdi.kubevirt.io/v1beta1
+    kind: DataVolume
+    labelSelector:
+      {{ $volumeTypeLabelKey }}: {{ $typeEphemeral }}
+
+- name: start-ephemeral-vms
+  jobType: kubevirt
+  qps: 20
+  burst: 20
+  jobIterations: 1
+  maxWaitTimeout: 1h
+  objectDelay: 1m
+  beforeCleanup: "./check.sh check_vm_running {{ $vmTypeLabelKey }} {{ $typeEphemeral }} {{ .testNamespace }} {{ .privateKey }} fedora"
+  objectWait: true
+  objects:
+  - kubeVirtOp: start
+    labelSelector:
+      kube-burner-job: {{ $createVMsJobName }}
+      {{ $vmTypeLabelKey }}: {{ $typeEphemeral }}
