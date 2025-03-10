@@ -3,17 +3,11 @@ kind: VirtualMachine
 metadata:
   name: "{{ .vmName }}-{{ .Iteration }}-{{ .Replica }}"
   labels:
-  {{ range $key, $value := .vmLabels }}
-    {{ $key }}: {{ $value }}
-  {{ end }}
+    virt-ephemeral-restart.kube-burner.io/group: "group-{{ .Iteration }}"
 spec:
   dataVolumeTemplates:
   - metadata:
-      name: "{{ .rootDiskVolumeName }}-{{ .Iteration }}-{{ .Replica }}"
-      labels:
-      {{ range $key, $value := .rootVolumeLabels }}
-        {{ $key }}: {{ $value }}
-      {{ end }}
+      name: "{{ .vmName }}-root-{{ .Iteration }}-{{ .Replica }}"
     spec:
     {{ if .rootdiskVolumeSource }}
       source: {{ .rootdiskVolumeSource | mustToJson }}
@@ -60,7 +54,7 @@ spec:
         pod: {}
       volumes:
       - dataVolume:
-          name: "{{ .rootDiskVolumeName }}-{{ .Iteration }}-{{ .Replica }}"
+          name: "{{ .vmName }}-root-{{ .Iteration }}-{{ .Replica }}"
         name: rootdisk
       - cloudInitNoCloud:
           userData: |

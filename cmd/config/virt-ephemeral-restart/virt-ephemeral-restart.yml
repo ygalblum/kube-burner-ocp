@@ -6,10 +6,6 @@
 {{- $createVMsJobName := "create-vms" -}}
 {{- $vmName := "ephemeral-vm" -}}
 {{- $sshPublicKeySecretName := "burner-clone-virt-ephemeral-restart" -}}
-{{- $rootDiskVolumeName := (list $vmName "root") | join "-" }}
-{{- $vmTypeLabelKey := "clone.kube-burner.io/vm-type" -}}
-{{- $volumeTypeLabelKey := "clone.kube-burner.io/volume-type" -}}
-{{- $typeEphemeral := "ephemeral" -}}
 
 global:
   measurements:
@@ -49,9 +45,9 @@ jobs:
   waitWhenFinished: false
   podWait: true
   # timeout time after waiting for all object creation
-  maxWaitTimeout: 15m
+  maxWaitTimeout: 30m
   # wait before job completes to allow metrics collection
-  jobPause: 1m
+  jobPause: 10s
   # Do not clean the namespaces
   cleanup: false
   # Set missing key as empty to allow using default values
@@ -86,9 +82,9 @@ jobs:
   waitWhenFinished: false
   podWait: true
   # timeout time after waiting for all object creation
-  maxWaitTimeout: 15m
+  maxWaitTimeout: 30m
   # wait before job completes to allow metrics collection
-  jobPause: 1m
+  jobPause: 10s
   # Do not clean the namespaces
   cleanup: false
   # Set missing key as empty to allow using default values
@@ -122,7 +118,7 @@ jobs:
 
 - name: {{ $createVMsJobName }}
   jobType: create
-  jobIterations: 1
+  jobIterations: {{ .vmGroups | len }}
   qps: 20
   burst: 20
   namespacedIterations: false
@@ -151,14 +147,9 @@ jobs:
       publicKeyPath: {{ .publicKey }}
 
   - objectTemplate: templates/vm.yml
-    replicas: {{ .vmCount }}
+    replicas: {{ .vmsPerIteration }}
     inputVars:
       vmName: {{ $vmName }}
-      vmLabels:
-        {{ $vmTypeLabelKey }}: {{ $typeEphemeral }}
-      rootDiskVolumeName: {{ $rootDiskVolumeName }}
-      rootVolumeLabels:
-        {{ $volumeTypeLabelKey }}: {{ $typeEphemeral }}
       rootdiskVolumeSourceRef:
         kind: DataSource
         name: {{ $baseDataSourceName }}
@@ -178,7 +169,6 @@ jobs:
   - kubeVirtOp: stop
     labelSelector:
       kube-burner-job: {{ $createVMsJobName }}
-      {{ $vmTypeLabelKey }}: {{ $typeEphemeral }}
 
 - name: delete-ephemeral-volumes
   jobType: delete
@@ -189,7 +179,7 @@ jobs:
   - apiVersion: cdi.kubevirt.io/v1beta1
     kind: DataVolume
     labelSelector:
-      {{ $volumeTypeLabelKey }}: {{ $typeEphemeral }}
+      kube-burner-job: {{ $createVMsJobName }}
 
 - name: start-ephemeral-vms
   jobType: kubevirt
@@ -198,10 +188,12 @@ jobs:
   jobIterations: 1
   maxWaitTimeout: 1h
   objectDelay: 1m
-  beforeCleanup: "./check.sh check_vm_running {{ $vmTypeLabelKey }} {{ $typeEphemeral }} {{ .testNamespace }} {{ .privateKey }} fedora"
+  beforeCleanup: "./check.sh check_vm_running kube-burner-job {{ $createVMsJobName }} {{ .testNamespace }} {{ .privateKey }} fedora"
   objectWait: true
   objects:
+  {{ range $vmGroupIndex := .vmGroups }}
   - kubeVirtOp: start
     labelSelector:
       kube-burner-job: {{ $createVMsJobName }}
-      {{ $vmTypeLabelKey }}: {{ $typeEphemeral }}
+      virt-ephemeral-restart.kube-burner.io/group: "group-{{ $vmGroupIndex }}"
+  {{ end }}

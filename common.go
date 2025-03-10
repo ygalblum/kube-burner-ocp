@@ -91,10 +91,10 @@ func getK8SConnector() k8sconnector.K8SConnector {
 	return k8sConnector
 }
 
-func generateLoopCounterSlice(length int) []string {
+func generateLoopCounterSlice(length, startValue int) []string {
 	counter := make([]string, length)
-	for i := 0; i < length; i++ {
-		counter[i] = fmt.Sprint(i + 1)
+	for i := range length {
+		counter[i] = fmt.Sprint(i + startValue)
 	}
 	return counter
 }
