@@ -107,7 +107,7 @@ func NewVirtCapacityBenchmark(wh *workloads.WorkloadHelper) *cobra.Command {
 				"vmCount":                    fmt.Sprint(vmsPerIteration),
 				"storageClassName":           storageClassName,
 				"testNamespace":              testNamespace,
-				"dataVolumeCounters":         generateLoopCounterSlice(dataVolumeCount),
+				"dataVolumeCounters":         generateLoopCounterSlice(dataVolumeCount, 1),
 				"skipMigrationJob":           skipMigrationJob,
 				"rootVolumeSize":             rootVolumeSize,
 				"dataVolumeSize":             dataVolumeSize,

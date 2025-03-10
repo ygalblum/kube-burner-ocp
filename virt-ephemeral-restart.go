@@ -38,7 +38,8 @@ func NewVirtEphemeralRestart(wh *workloads.WorkloadHelper) *cobra.Command {
 	var volumeSnapshotClassName string
 	var sshKeyPairPath string
 	var useSnapshot bool
-	var vmCount int
+	var iterations int
+	var vmsPerIteration int
 	var testNamespace string
 	var metricsProfiles []string
 	var volumeAccessMode string
@@ -95,15 +96,16 @@ func NewVirtEphemeralRestart(wh *workloads.WorkloadHelper) *cobra.Command {
 				log.Fatalf("Failed to generate SSH keys for the test - %v", err)
 			}
 
-			additionalVars := map[string]interface{}{
+			additionalVars := map[string]any{
 				"privateKey":              privateKeyPath,
 				"publicKey":               publicKeyPath,
 				"storageClassName":        storageClassName,
 				"volumeSnapshotClassName": volumeSnapshotClassName,
 				"testNamespace":           testNamespace,
 				"useSnapshot":             useSnapshot,
-				"vmCount":                 vmCount,
+				"vmsPerIteration":         vmsPerIteration,
 				"accessMode":              accessModeTranslator[volumeAccessMode],
+				"vmGroups":                generateLoopCounterSlice(iterations, 0),
 			}
 
 			setMetrics(cmd, metricsProfiles)
@@ -116,7 +118,8 @@ func NewVirtEphemeralRestart(wh *workloads.WorkloadHelper) *cobra.Command {
 	cmd.Flags().StringVar(&storageClassName, "storage-class", "", "Name of the Storage Class to test")
 	cmd.Flags().StringVar(&sshKeyPairPath, "ssh-key-path", "", "Path to save the generarated SSH keys")
 	cmd.Flags().BoolVar(&useSnapshot, "use-snapshot", true, "Clone from snapshot")
-	cmd.Flags().IntVar(&vmCount, "vms", 10, "Number of clone VMs to create")
+	cmd.Flags().IntVar(&iterations, "iterations", 2, "Number of start iterations. The total number of VMs is iterations*iteration-vms")
+	cmd.Flags().IntVar(&vmsPerIteration, "iteration-vms", 10, "How many VMs to start simultaneously. The total number of VMs is iterations*iteration-vms")
 	cmd.Flags().StringVarP(&testNamespace, "namespace", "n", virtEphemeralRestartTestName, "Base name for the namespace to run the test in")
 	cmd.Flags().StringVar(&volumeAccessMode, "access-mode", "RWX", "Access mode for the created volumes - RO, RWO, RWX")
 	cmd.Flags().StringSliceVar(&metricsProfiles, "metrics-profile", []string{"metrics.yml"}, "Comma separated list of metrics profiles to use")
