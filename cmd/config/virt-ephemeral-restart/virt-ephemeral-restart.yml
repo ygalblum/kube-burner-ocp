@@ -170,30 +170,40 @@ jobs:
     labelSelector:
       kube-burner-job: {{ $createVMsJobName }}
 
-- name: delete-ephemeral-volumes
+{{ range $vmGroupIndex := .vmGroups }}
+- name: "delete-ephemeral-volumes-{{ $vmGroupIndex }}"
   jobType: delete
   waitForDeletion: false
-  qps: 5
-  burst: 10
+  qps: 20
+  burst: 20
   objects:
   - apiVersion: cdi.kubevirt.io/v1beta1
     kind: DataVolume
     labelSelector:
-      kube-burner-job: {{ $createVMsJobName }}
+      virt-ephemeral-restart.kube-burner.io/group: "group-{{ $vmGroupIndex }}"
 
-- name: start-ephemeral-vms
+- name: "start-ephemeral-vms-{{ $vmGroupIndex }}"
   jobType: kubevirt
   qps: 20
   burst: 20
   jobIterations: 1
-  maxWaitTimeout: 1h
-  objectDelay: 1m
-  beforeCleanup: "./check.sh check_vm_running kube-burner-job {{ $createVMsJobName }} {{ .testNamespace }} {{ .privateKey }} fedora"
-  objectWait: true
+  jobPause: 1m
   objects:
-  {{ range $vmGroupIndex := .vmGroups }}
   - kubeVirtOp: start
     labelSelector:
-      kube-burner-job: {{ $createVMsJobName }}
       virt-ephemeral-restart.kube-burner.io/group: "group-{{ $vmGroupIndex }}"
-  {{ end }}
+{{ end }}
+
+- name: wait-running
+  jobType: read
+  qps: 20
+  burst: 20
+  jobIterations: 1
+  maxWaitTimeout: 1h
+  waitWhenFinished: true
+  beforeCleanup: "./check.sh check_vm_running kube-burner-job {{ $createVMsJobName }} {{ .testNamespace }} {{ .privateKey }} fedora"
+  objects:
+  - apiVersion: kubevirt.io/v1
+    kind: VirtualMachine
+    labelSelector:
+      kube-burner-job: {{ $createVMsJobName }}
