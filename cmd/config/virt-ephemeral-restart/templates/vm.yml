@@ -22,7 +22,7 @@ spec:
         resources:
           requests:
             storage: {{ default "5Gi" .rootVolumeSize }}
-  running: true
+  runStrategy: RerunOnFailure
   template:
     spec:
       accessCredentials:
