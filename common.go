@@ -319,7 +319,7 @@ func cleanupTestNamespaces(ctx context.Context, labelSelector string) {
 func verifyOrGetRandomWorkerNodeName(workerNodeName string) string {
 	k8sConnector := getK8SConnector()
 
-	nodes, err := k8sConnector.ClientSet().CoreV1().Nodes().List(context.Background(), metav1.ListOptions{})
+	nodes, err := k8sConnector.ClientSet().CoreV1().Nodes().List(context.Background(), metav1.ListOptions{LabelSelector: "node-role.kubernetes.io/worker"})
 	if err != nil {
 		log.Fatalf("Error getting nodes: %v", err)
 		return ""
