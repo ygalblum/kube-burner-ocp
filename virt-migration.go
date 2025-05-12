@@ -39,8 +39,9 @@ func NewVirtMigration(wh *workloads.WorkloadHelper) *cobra.Command {
 	var iterations int
 	var vmsPerIteration int
 	var testNamespace string
-	var metricsProfiles []string
 	var dataVolumeCount int
+	var metricsProfiles []string
+
 	var rc int
 	cmd := &cobra.Command{
 		Use:          virtMigrationTestName,
@@ -59,19 +60,14 @@ func NewVirtMigration(wh *workloads.WorkloadHelper) *cobra.Command {
 				log.Fatalf("Failed to generate SSH keys for the test - %v", err)
 			}
 
-			rootVolumeSize := 6
-			dataVolumeSize := 1
-
 			additionalVars := map[string]any{
 				"privateKey":           privateKeyPath,
 				"publicKey":            publicKeyPath,
 				"storageClassName":     storageClassName,
 				"testNamespace":        testNamespace,
-				"vmCreateIterations":  iterations,
+				"vmCreateIterations":   iterations,
 				"vmCreatePerIteration": vmsPerIteration,
 				"dataVolumeCounters":   generateLoopCounterSlice(dataVolumeCount, 1),
-				"rootVolumeSize":       rootVolumeSize,
-				"dataVolumeSize":       dataVolumeSize,
 				"workerNodeName":       "worker-0",
 			}
 
