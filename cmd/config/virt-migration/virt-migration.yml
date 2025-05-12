@@ -2,8 +2,6 @@
 {{- $testNamespacesLabelKey := "kube-burner.io/test-name" -}}
 {{- $vmName := $testName -}}
 {{- $sshPublicKeySecretName := $testName -}}
-{{- $rootVolumeSizeStr := (list (.rootVolumeSize | toString) "Gi") | join "" -}}
-{{- $dataVolumeSizeStr := (list (.dataVolumeSize | toString) "Gi") | join "" -}}
 {{- $createMigratingVMsJobName := "create-migrating-vms" -}}
 ---
 global:
@@ -65,8 +63,6 @@ jobs:
       name: {{ $vmName }}
       rootDiskImage: quay.io/containerdisks/fedora:41
       storageClassName: {{ .storageClassName }}
-      rootVolumeSize: {{ $rootVolumeSizeStr }}
-      dataVolumeSize: {{ $dataVolumeSizeStr }}
       sshPublicKeySecret: {{ $sshPublicKeySecretName }}
       dataVolumeCounters:
       {{ range .dataVolumeCounters }}

@@ -1,6 +1,5 @@
 {{- $storageClassName := .storageClassName -}}
 {{- $dataVolumeLabels := .dataVolumeLabels -}}
-{{- $dataVolumeSize := (default "1Gi" .dataVolumeSize) -}}
 {{- $name := .name -}}
 {{- $counter := .counter -}}
 {{- $replica := .Replica }}
@@ -24,7 +23,7 @@ spec:
         storageClassName: {{ .storageClassName }}
         resources:
           requests:
-            storage: {{ default "10Gi" .rootVolumeSize }}
+            storage: "10Gi"
   {{ range $dataVolumeIndex := .dataVolumeCounters }}
   - metadata:
       name: "{{ $name }}-{{ $iteration }}-{{ $replica }}-data-{{ $dataVolumeIndex }}"
@@ -37,7 +36,7 @@ spec:
         storageClassName: {{ $storageClassName }}
         resources:
           requests:
-            storage: {{ $dataVolumeSize }}
+            storage: "1Gi"
   {{ end }}
   runStrategy: RerunOnFailure
   template:
