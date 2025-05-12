@@ -82,13 +82,13 @@ func NewVirtMigration(wh *workloads.WorkloadHelper) *cobra.Command {
 			os.Exit(rc)
 		},
 	}
+	cmd.Flags().StringVar(&workerNodeName, "worker-node", "", "Name of the Worker Node to schedule and migrate from. If not set, a random one is used")
 	cmd.Flags().StringVar(&storageClassName, "storage-class", "", "Name of the Storage Class to test")
 	cmd.Flags().StringVar(&sshKeyPairPath, "ssh-key-path", "", "Path to save the generarated SSH keys")
-	cmd.Flags().IntVar(&iterations, "iterations", 2, "Number of start iterations. The total number of VMs is iterations*iteration-vms")
-	cmd.Flags().IntVar(&vmsPerIteration, "iteration-vms", 10, "How many VMs to start simultaneously. The total number of VMs is iterations*iteration-vms")
 	cmd.Flags().StringVarP(&testNamespace, "namespace", "n", virtMigrationTestName, "Base name for the namespace to run the test in")
+	cmd.Flags().IntVar(&iterations, "iterations", 2, "How many interations of VM creations. The total number of VMs is iterations*iteration-vms")
+	cmd.Flags().IntVar(&vmsPerIteration, "iteration-vms", 10, "How many VMs to create in each iteration. The total number of VMs is iterations*iteration-vms")
 	cmd.Flags().IntVar(&dataVolumeCount, "data-volume-count", 9, "Number of data volumes per VM")
 	cmd.Flags().StringSliceVar(&metricsProfiles, "metrics-profile", []string{"metrics.yml"}, "Comma separated list of metrics profiles to use")
-	cmd.Flags().StringVar(&workerNodeName, "worker-node", "", "Name of the Worker Node to schedule and migrate from. If not set, a random one is used")
 	return cmd
 }
