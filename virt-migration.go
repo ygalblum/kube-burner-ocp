@@ -40,6 +40,7 @@ func NewVirtMigration(wh *workloads.WorkloadHelper) *cobra.Command {
 	var vmsPerIteration int
 	var testNamespace string
 	var dataVolumeCount int
+	var workerNodeName string
 	var metricsProfiles []string
 
 	var rc int
@@ -53,6 +54,9 @@ func NewVirtMigration(wh *workloads.WorkloadHelper) *cobra.Command {
 			}
 
 			storageClassName, _ = getStorageAndSnapshotClasses(storageClassName, false, true)
+
+			workerNodeName = verifyOrGetRandomWorkerNodeName(workerNodeName)
+			log.Infof("Test will schedule on and migrate from worker node [%v]", workerNodeName)
 		},
 		Run: func(cmd *cobra.Command, args []string) {
 			privateKeyPath, publicKeyPath, err := ssh.GenerateSSHKeyPair(sshKeyPairPath, virtMigrationTmpDirPattern, virtMigrationSSHKeyFileName)
@@ -68,7 +72,7 @@ func NewVirtMigration(wh *workloads.WorkloadHelper) *cobra.Command {
 				"vmCreateIterations":   iterations,
 				"vmCreatePerIteration": vmsPerIteration,
 				"dataVolumeCounters":   generateLoopCounterSlice(dataVolumeCount, 1),
-				"workerNodeName":       "worker-0",
+				"workerNodeName":       workerNodeName,
 			}
 
 			setMetrics(cmd, metricsProfiles)
@@ -85,5 +89,6 @@ func NewVirtMigration(wh *workloads.WorkloadHelper) *cobra.Command {
 	cmd.Flags().StringVarP(&testNamespace, "namespace", "n", virtMigrationTestName, "Base name for the namespace to run the test in")
 	cmd.Flags().IntVar(&dataVolumeCount, "data-volume-count", 9, "Number of data volumes per VM")
 	cmd.Flags().StringSliceVar(&metricsProfiles, "metrics-profile", []string{"metrics.yml"}, "Comma separated list of metrics profiles to use")
+	cmd.Flags().StringVar(&workerNodeName, "worker-node", "", "Name of the Worker Node to schedule and migrate from. If not set, a random one is used")
 	return cmd
 }
