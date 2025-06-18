@@ -34,6 +34,7 @@ const (
 	virtMigrationDefaultDataVolumeCount = 1
 	virtMigrationDefaultVMsPerIteration = 10
 	virtMigrationDefaultIteration       = 2
+	virtMigrationDefaultLoadVMs         = 0
 )
 
 // Returns virt-density workload
@@ -46,6 +47,7 @@ func NewVirtMigration(wh *workloads.WorkloadHelper) *cobra.Command {
 	var dataVolumeCount int
 	var workerNodeName string
 	var metricsProfiles []string
+	var loadVMs int
 
 	var rc int
 	cmd := &cobra.Command{
@@ -77,6 +79,7 @@ func NewVirtMigration(wh *workloads.WorkloadHelper) *cobra.Command {
 				"vmCreatePerIteration": vmsPerIteration,
 				"dataVolumeCounters":   generateLoopCounterSlice(dataVolumeCount, 1),
 				"workerNodeName":       workerNodeName,
+				"loadVMs":              loadVMs,
 			}
 
 			setMetrics(cmd, metricsProfiles)
@@ -93,6 +96,7 @@ func NewVirtMigration(wh *workloads.WorkloadHelper) *cobra.Command {
 	cmd.Flags().IntVar(&iterations, "iterations", virtMigrationDefaultIteration, "How many iterations of VM creations. The total number of VMs is iterations*iteration-vms")
 	cmd.Flags().IntVar(&vmsPerIteration, "iteration-vms", virtMigrationDefaultVMsPerIteration, "How many VMs to create in each iteration. The total number of VMs is iterations*iteration-vms")
 	cmd.Flags().IntVar(&dataVolumeCount, "data-volume-count", virtMigrationDefaultDataVolumeCount, "Number of data volumes per VM")
+	cmd.Flags().IntVar(&loadVMs, "load-vms", virtMigrationDefaultLoadVMs, "Number of VMs to create for system load that will not be migrated")
 	cmd.Flags().StringSliceVar(&metricsProfiles, "metrics-profile", []string{"metrics.yml"}, "Comma separated list of metrics profiles to use")
 	return cmd
 }

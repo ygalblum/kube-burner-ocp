@@ -603,6 +603,11 @@ Users may control the workload sizes by passing the following arguments:
 
     The total number of `VirtualMachines` created is `--iteration` * `--iteration-vms`
 
+#### Addition `VirtualMachines` load
+
+The test can create additional `VirtualMachines` that will not be migrated to simulate load on the other nodes as well.
+By default, no additional `VirtualMachines` are created. Set `--load-vms` to the number of desired `VirtualMachines`
+
 #### Initial Worker Node
 
 The worker node on which all VMs are scheduled and migrated from can be set by passing the `--worker-node` parameter.
