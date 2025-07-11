@@ -396,8 +396,8 @@ github.com/vishvananda/netns v0.0.4 h1:Oeaw1EM2JMxD51g9uhtC0D7erkIjgmj8+JZc26m1Y
 github.com/vishvananda/netns v0.0.4/go.mod h1:SpkAiCQRtJ6TvvxPnOSyH3BMl6unz3xZlaprSwhNNJM=
 github.com/x448/float16 v0.8.4 h1:qLwI1I70+NjRFUR3zs1JPUCgaCXSh3SW62uAKT1mSBM=
 github.com/x448/float16 v0.8.4/go.mod h1:14CWIYCyZA/cWjXOioeEpHeN/83MdbZDRQHoFcYsOfg=
-github.com/ygalblum/kube-burner v0.0.0-20250711180556-65f9769969f6 h1:gc2WC5QwxI29F/jrmy2b4/ysnv/jU20fTL2qu0CsgPA=
-github.com/ygalblum/kube-burner v0.0.0-20250711180556-65f9769969f6/go.mod h1:+wRDOZilvMhf7N/MRztqkMIAdvP449nNcvibNt1ZvY4=
+github.com/ygalblum/kube-burner v0.0.0-20250711194922-b35ecf8a9c23 h1:Tsto4es0ebFOsEkaYjFmIU+rj5KfOnbdZwnOoJrfQO8=
+github.com/ygalblum/kube-burner v0.0.0-20250711194922-b35ecf8a9c23/go.mod h1:+wRDOZilvMhf7N/MRztqkMIAdvP449nNcvibNt1ZvY4=
 github.com/yuin/goldmark v1.1.27/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 github.com/yuin/goldmark v1.2.1/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9decYSb74=
 github.com/yuin/goldmark v1.3.5/go.mod h1:mwnBkeHKe2W/ZEtQ+71ViKU8L12m81fl3OWwC1Zlc8k=
